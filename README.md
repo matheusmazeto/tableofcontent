@@ -77,4 +77,3 @@ The component ships as plain CSS. The most useful variables:
 - Active section is reflected with `aria-current="true"`.
 - Tooltips are reachable through keyboard focus.
 - Motion and sliders respect `prefers-reduced-motion`.
-
