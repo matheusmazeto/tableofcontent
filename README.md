@@ -4,6 +4,8 @@ A sticky left-edge project table of contents for portfolio pages. It tracks the 
 
 ## Demo
 
+Live demo: https://batuhankarasakal.github.io/tableofcontent/
+
 ```sh
 npm start
 ```
