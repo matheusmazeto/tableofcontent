@@ -180,6 +180,8 @@ export function initProjectToc(userOptions = {}) {
   let activeId = "";
   let hoveredLink = null;
   let hoverClearTimeout;
+  let magnetFrame = 0;
+  let pendingMagnetY = null;
   const previewStates = new Map();
   const cleanups = [];
 
@@ -356,9 +358,72 @@ export function initProjectToc(userOptions = {}) {
 
     if (hoveredLink) {
       hoveredLink.classList.add("is-hovered");
+      updateMagnetFromLink(hoveredLink);
       setPreviewIndex(hoveredLink, 0, false);
       startPreview(hoveredLink);
     }
+  }
+
+  function setMagnetStrength(link, strength) {
+    const nextStrength = Math.max(0, Math.min(1, strength));
+
+    if (nextStrength <= 0.01) {
+      link.style.removeProperty("--project-toc-magnet");
+      return;
+    }
+
+    link.style.setProperty("--project-toc-magnet", nextStrength.toFixed(3));
+  }
+
+  function updateMagnetFromY(pointerY) {
+    const influence = 112;
+
+    sections.forEach(({ link }) => {
+      const rect = link.getBoundingClientRect();
+      const centerY = rect.top + rect.height / 2;
+      const distance = Math.abs(pointerY - centerY);
+      const strength = Math.pow(Math.max(0, 1 - distance / influence), 1.7);
+
+      setMagnetStrength(link, strength);
+    });
+  }
+
+  function updateMagnetFromLink(link) {
+    const rect = link.getBoundingClientRect();
+    updateMagnetFromY(rect.top + rect.height / 2);
+  }
+
+  function requestMagnetUpdate(pointerY) {
+    pendingMagnetY = pointerY;
+
+    if (magnetFrame) {
+      return;
+    }
+
+    magnetFrame = window.requestAnimationFrame(() => {
+      magnetFrame = 0;
+
+      if (pendingMagnetY !== null) {
+        updateMagnetFromY(pendingMagnetY);
+      }
+    });
+  }
+
+  function clearMagnet() {
+    pendingMagnetY = null;
+
+    if (magnetFrame) {
+      window.cancelAnimationFrame(magnetFrame);
+      magnetFrame = 0;
+    }
+
+    sections.forEach(({ link }) => {
+      link.style.removeProperty("--project-toc-magnet");
+    });
+  }
+
+  function shouldUpdateMagnet(event) {
+    return !(event.target instanceof Element && event.target.closest(".project-toc-tooltip"));
   }
 
   function clearHoveredLink(link, delay = 90) {
@@ -411,12 +476,24 @@ export function initProjectToc(userOptions = {}) {
   sections.forEach(({ link, section }) => {
     buildPreview(link, section);
 
-    addListener(link, "pointerenter", () => {
+    addListener(link, "pointerenter", (event) => {
+      if (shouldUpdateMagnet(event)) {
+        requestMagnetUpdate(event.clientY);
+      }
+
       setHoveredLink(link);
 
       if (options.enableSound) {
         playHoverSound("hover", options.sounds);
       }
+    });
+
+    addListener(link, "pointermove", (event) => {
+      if (!shouldUpdateMagnet(event)) {
+        return;
+      }
+
+      requestMagnetUpdate(event.clientY);
     });
 
     addListener(link, "pointerleave", (event) => {
@@ -428,6 +505,7 @@ export function initProjectToc(userOptions = {}) {
     });
 
     addListener(link, "focus", () => {
+      updateMagnetFromLink(link);
       setHoveredLink(link);
 
       if (options.enableSound) {
@@ -435,7 +513,10 @@ export function initProjectToc(userOptions = {}) {
       }
     });
 
-    addListener(link, "blur", () => clearHoveredLink(link, 0));
+    addListener(link, "blur", () => {
+      clearHoveredLink(link, 0);
+      clearMagnet();
+    });
 
     addListener(link, "pointerdown", () => {
       if (options.enableSound) {
@@ -467,6 +548,22 @@ export function initProjectToc(userOptions = {}) {
     });
   });
 
+  addListener(toc, "pointermove", (event) => {
+    if (!shouldUpdateMagnet(event)) {
+      return;
+    }
+
+    requestMagnetUpdate(event.clientY);
+  });
+
+  addListener(toc, "pointerleave", (event) => {
+    if (event.relatedTarget instanceof Node && toc.contains(event.relatedTarget)) {
+      return;
+    }
+
+    clearMagnet();
+  });
+
   addListener(window, "scroll", updateActiveFromScroll, { passive: true });
   addListener(window, "resize", updateActiveFromScroll);
   updateActiveFromScroll();
@@ -476,6 +573,7 @@ export function initProjectToc(userOptions = {}) {
       window.clearTimeout(hoverClearTimeout);
     }
 
+    clearMagnet();
     previewStates.forEach((_, link) => stopPreview(link));
     cleanups.forEach((cleanup) => cleanup());
   };

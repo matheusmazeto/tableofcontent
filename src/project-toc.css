@@ -1,15 +1,16 @@
 :root {
-  --project-toc-left: 35px;
+  --project-toc-left: 34px;
   --project-toc-top: max(160px, 30.6vh);
   --project-toc-width: 366px;
   --project-toc-item-width: 64px;
-  --project-toc-item-height: 16px;
-  --project-toc-line-width: 32px;
-  --project-toc-line-active-width: 64px;
-  --project-toc-line-height: 1.5px;
+  --project-toc-item-height: 20px;
+  --project-toc-line-width: 12px;
+  --project-toc-line-active-width: 32px;
+  --project-toc-line-height: 2px;
+  --project-toc-line-magnetic-delta: 20px;
   --project-toc-line-color: #d8d8dc;
   --project-toc-line-active-color: #424346;
-  --project-toc-tooltip-left: 73px;
+  --project-toc-tooltip-left: 72px;
   --project-toc-tooltip-width: 286px;
   --project-toc-tooltip-bg: #424346;
   --project-toc-tooltip-color: #f7f7f8;
@@ -58,17 +59,18 @@
   top: 50%;
   left: 0;
   display: block;
-  width: var(--project-toc-line-width);
+  width: calc(var(--project-toc-line-width) + (var(--project-toc-line-magnetic-delta) * var(--project-toc-magnet, 0)));
   height: var(--project-toc-line-height);
   border-radius: 999px;
   background: var(--project-toc-line-color);
   transform-origin: left center;
   transform: translateY(-50%);
+  will-change: width, background, transform;
   transition:
-    width 220ms cubic-bezier(0.2, 0, 0, 1),
+    width 260ms cubic-bezier(0.16, 1, 0.3, 1),
     background 180ms ease,
     opacity 180ms ease,
-    transform 220ms cubic-bezier(0.2, 0, 0, 1);
+    transform 260ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .project-toc a:hover .project-toc-line,
@@ -80,7 +82,7 @@
 }
 
 .project-toc a:active .project-toc-line {
-  transform: translateY(-50%) scaleX(0.9);
+  transform: translateY(-50%) scaleX(0.92);
 }
 
 .project-toc-tooltip {

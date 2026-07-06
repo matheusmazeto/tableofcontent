@@ -64,11 +64,12 @@ The component ships as plain CSS. The most useful variables:
 
 ```css
 :root {
-  --project-toc-left: 35px;
+  --project-toc-left: 34px;
   --project-toc-top: max(160px, 30.6vh);
-  --project-toc-line-width: 32px;
-  --project-toc-line-active-width: 64px;
-  --project-toc-line-height: 1.5px;
+  --project-toc-line-width: 12px;
+  --project-toc-line-active-width: 32px;
+  --project-toc-line-height: 2px;
+  --project-toc-line-magnetic-delta: 20px;
   --project-toc-tooltip-bg: #424346;
 }
 ```
